@@ -1,6 +1,6 @@
 CREATE TRIGGER sprawdz_date_przyjecia
 ON pojazd 
-FOR INSERT
+FOR INSERT, UPDATE
 AS
 DECLARE
 	@data_przyjecia DATE;
