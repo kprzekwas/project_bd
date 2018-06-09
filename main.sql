@@ -47,7 +47,7 @@ add constraint model_pojazd_fk foreign key (id_modelu) references model(id_model
 ALTER TABLE pojazd
 add constraint rodzaj_pojazd_fk foreign key (id_rodzaju) references rodzaj(id_rodzaju)
 ALTER TABLE model
-add constraint marki_model_fk foreign key (id_marki) references marki(id_marki)
+ADD CONSTRAINT marki_model_fk FOREIGN KEY (id_marki) REFERENCES marki(id_marki)
 
 -- dodawanie rekordów do tabel model, marki, rodzaj, kolor
 
@@ -321,12 +321,10 @@ insert into model VALUES
 ('Karoq', 23),
 ('Kodiaq', 23)
 
-
-
 select * from rodzaj
 
 --dodawanie rekordow encji pojazd
-insert into pojazd VALUES
+INSERT INTO pojazd VALUES
 (40,2,12,2003, '32131J211231MNJ41K', 208938, '2018-05-01', 35900),
 (5,2,1,2011, '21JKMK3K2N4K2J42NJ', 158943, '2017-12-10', 21900),
 (170,2,24,2004, '2K4MNJ3K12K3M', 319847, '2018-03-12', 13200),
@@ -388,16 +386,17 @@ CREATE TABLE pracownik (
 id_pracownika int IDENTITY(1,1) PRIMARY KEY,
 id_adres int,
 imie varchar(30) not null,
-Nazwisko varchar(50) not null,
+nazwisko varchar(50) not null,
 PESEL char(11) not null, 
 telefon varchar(20) not null, 
+wyplata MONEY,
 email varchar(50), 
 data_przyjecia DATE, 
 )
 
 -- klucz obcy dla adresu pracownika (jeden do wielu, ponieważ dwóch lub wiecej klientów/pracowników mogą mieć ten sam adres)
 ALTER TABLE pracownik
-add constraint adres_pracownik_fk foreign key (id_adres) references adres(id_adres)
+ADD CONSTRAINT adres_pracownik_fk FOREIGN KEY (id_adres) REFERENCES adres(id_adres) ON DELETE CASCADE
 
 
 --towrzenie encji transakcja 
@@ -410,13 +409,14 @@ rodzaj_transakcji VARCHAR(15) not null,
 kwota MONEY,
 data_transakcji DATE,
 )
+
 --zakładanie klucza obcego dla encji transakcja 
 ALTER TABLE transakcja
-add constraint pracownik_transakcja_fk foreign key (id_pracownika) references pracownik(id_pracownika)
+ADD CONSTRAINT pracownik_transakcja_fk FOREIGN KEY (id_pracownika) REFERENCES pracownik(id_pracownika) ON DELETE CASCADE
 ALTER TABLE transakcja
-add constraint klient_transakcja_fk foreign key (id_klienta) references klient(id_klienta)
+ADD CONSTRAINT klient_transakcja_fk FOREIGN KEY (id_klienta) REFERENCES klient(id_klienta) ON DELETE CASCADE
 ALTER TABLE transakcja
-add constraint pojazd_transakcja_fk foreign key (id_pojazdu) references pojazd(id_pojazdu)
+ADD CONSTRAINT pojazd_transakcja_fk FOREIGN KEY (id_pojazdu) REFERENCES pojazd(id_pojazdu) ON DELETE CASCADE
 
 --towrzenie encji faktura wraz z tworzeniem kluczy obcych 
 
@@ -429,7 +429,7 @@ data_wystawienia date,
 
 --Dodawanie rekordow do tabeli adres
 
-insert into adres VALUES
+INSERT INTO adres VALUES
 ('Warszawska', '10', '13' , '82-530', 'Kwiatkowo'),
 ('Warszawska', '1', null, '82-500', 'Kwidzyn'),
 ('Szeroka', '1', '13' , '81-530', 'Warszawa'),
@@ -452,11 +452,11 @@ insert into adres VALUES
 
 -- dodanie rekordów do encji pracownik 
 INSERT INTO pracownik VALUES
-(19,'Klaudia', 'Klawinska', '84071102923' , '724105147', 'Blabla@gmial.com','2010-05-03'),
-(18,'Jan', 'Kowalski','11111111111', '5433444005', 'bubu@wp.pl','1998-04-03'),
-(17,'Janusz', 'Kowal', '12345678910' , '333444555', 'Baba@onet.pl','2017-03-12'),
-(16,'Ewa', 'Suchanka', '12336859401' , '509881818', 'milonakow12@wp.pl','2001-12-19'),
-(15,'Patryk', 'Lubelski', '98483920123' , '512342202', 'Patryk1233@o2.pl','2014-01-04')
+(19,'Klaudia', 'Klawinska', '84071102923' , '724105147', 7000, 'Blabla@gmial.com','2010-05-03'),
+(18,'Jan', 'Kowalski','11111111111', '5433444005', 4000, 'bubu@wp.pl','1998-04-03'),
+(17,'Janusz', 'Kowal', '12345678910' , '333444555', 3000, 'Baba@onet.pl','2017-03-12'),
+(16,'Ewa', 'Suchanka', '12336859401' , '509881818', 9000, 'milonakow12@wp.pl','2001-12-19'),
+(15,'Patryk', 'Lubelski', '98483920123' , '512342202', 6000, 'Patryk1233@o2.pl','2014-01-04')
 
 --dodanie rekordów do encji klient
 INSERT INTO klient VALUES
@@ -521,9 +521,16 @@ INSERT INTO faktura VALUES
 
 --widok na auta , które posiadał lub posiada komis
 
-select id_pojazdu, nazwa_marki, nazwa_modelu, rok_produkcji, nr_vin ,przebieg ,cena,data_przyjecia
-from pojazd p inner join model mo ON p.id_modelu=mo.id_modelu 
-inner join marki ma ON p.id_marki=ma.id_marki
+SELECT 
+	id_pojazdu, nazwa_marki, 
+	nazwa_modelu, rok_produkcji, 
+	nr_vin, przebieg, cena, data_przyjecia
+FROM 
+	pojazd p 
+INNER JOIN 
+	model mo ON p.id_modelu=mo.id_modelu 
+INNER JOIN 
+	marki ma ON p.id_marki=ma.id_marki
 
 --widok wszystkich marek oraz modeli 
 
@@ -549,4 +556,6 @@ order by ilosc_transakcji DESC
 
 -- widok klientow ktorzy kupili samochody 
 
-select * from klient
+select * from pojazd
+
+
