@@ -1,3 +1,5 @@
+use kprzekwas
+
 CREATE TABLE pojazd (
 	id_pojazdu int IDENTITY(1,1) PRIMARY KEY,
 	id_modelu int,
@@ -88,6 +90,7 @@ CREATE TABLE pracownik (
 	PESEL char(11) not null, 
 	telefon varchar(20) not null, 
 	wyplata MONEY,
+	premia BIT DEFAULT 0,
 	email varchar(50), 
 	data_przyjecia DATE, 
 )

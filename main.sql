@@ -1,54 +1,5 @@
 use kprzekwas
 
---tworzenie encji pojazd
- 
-CREATE TABLE pojazd (
-id_pojazdu int IDENTITY(1,1) PRIMARY KEY,
-id_modelu int,
-id_rodzaju int,
-id_koloru int, 
-rok_produkcji int,
-nr_vin varchar(25) UNIQUE not null,
-przebieg BIGINT not null,
-data_przyjecia date not null,
-cena MONEY not null,
-)
-
-
-CREATE TABLE marki (
-id_marki int IDENTITY(1,1) PRIMARY KEY,
-nazwa_marki VARCHAR(30) not NULL,
-kraj_pochodzenia VARCHAR (30) not null, 
-)
-
-CREATE TABLE kolor (
-id_koloru int IDENTITY(1,1) PRIMARY KEY,
-nazwa_koloru VARCHAR(20) not NULL,
-)
-
-CREATE TABLE model (
-id_modelu int IDENTITY(1,1) PRIMARY KEY,
-nazwa_modelu VARCHAR(30) not NULL,
-id_marki int, --klucz obcy marki 
-)
-
-CREATE TABLE rodzaj (
-id_rodzaju int IDENTITY(1,1) PRIMARY KEY,
-rodzaj_pojazdu VARCHAR(30) not NULL,
-)
-
-
-
---dodawanie kluczów obcych do encji pojazd
-ALTER TABLE pojazd
-ADD CONSTRAINT kolor_pojazd_fk FOREIGN KEY (id_koloru) REFERENCES kolor(id_koloru)
-ALTER TABLE pojazd
-add constraint model_pojazd_fk foreign key (id_modelu) references model(id_modelu)
-ALTER TABLE pojazd
-add constraint rodzaj_pojazd_fk foreign key (id_rodzaju) references rodzaj(id_rodzaju)
-ALTER TABLE model
-ADD CONSTRAINT marki_model_fk FOREIGN KEY (id_marki) REFERENCES marki(id_marki)
-
 -- dodawanie rekordów do tabel model, marki, rodzaj, kolor
 
 --dodanie rodzajow pojazdow
@@ -321,8 +272,6 @@ insert into model VALUES
 ('Karoq', 23),
 ('Kodiaq', 23)
 
-select * from rodzaj
-
 --dodawanie rekordow encji pojazd
 INSERT INTO pojazd VALUES
 (40,2,12,2003, '32131J211231MNJ41K', 208938, '2018-05-01', 35900),
@@ -355,78 +304,6 @@ INSERT INTO pojazd VALUES
 (50,2,4,2012,'48FJ4K958J432', 24543, '2018-04-19', 29500)
 
 
---Tworzenie encji klient 
-CREATE TABLE klient (
-id_klienta int IDENTITY(1,1) PRIMARY KEY,
-id_adres int,
-imie varchar(30) not null,
-Nazwisko varchar(50) not null,
-PESEL char(11) not null, 
-NIP varchar(20),
-telefon varchar(20) not null, 
-email varchar(50), 
-)
---tworzenie encji adres
-
-CREATE TABLE adres (
-id_adres int IDENTITY(1,1) PRIMARY KEY,
-ulica VARCHAR(25) not null, 
-numer_budynku int not null,
-numer_mieszkania int,
-kod VARCHAR(10) not null,
-miasto VARCHAR (30)
-)
-
---tworzenie klucza obcego encji klient  (jeden do wielu, ponieważ dwóch lub wiecej klientów/pracowników mogą mieć ten sam adres)
-ALTER TABLE klient
-add constraint adres_klient_fk foreign key (id_adres) references adres(id_adres)
-
---tworzenie encji pracownik 
-CREATE TABLE pracownik (
-id_pracownika int IDENTITY(1,1) PRIMARY KEY,
-id_adres int,
-imie varchar(30) not null,
-nazwisko varchar(50) not null,
-PESEL char(11) not null, 
-telefon varchar(20) not null, 
-wyplata MONEY,
-email varchar(50), 
-data_przyjecia DATE, 
-)
-
--- klucz obcy dla adresu pracownika (jeden do wielu, ponieważ dwóch lub wiecej klientów/pracowników mogą mieć ten sam adres)
-ALTER TABLE pracownik
-ADD CONSTRAINT adres_pracownik_fk FOREIGN KEY (id_adres) REFERENCES adres(id_adres) ON DELETE CASCADE
-
-
---towrzenie encji transakcja 
-CREATE TABLE transakcja(
-id_transakcji int IDENTITY(1,1) PRIMARY KEY,
-id_pracownika int,
-id_klienta int,
-id_pojazdu int,
-rodzaj_transakcji VARCHAR(15) not null,
-kwota MONEY,
-data_transakcji DATE,
-)
-
---zakładanie klucza obcego dla encji transakcja 
-ALTER TABLE transakcja
-ADD CONSTRAINT pracownik_transakcja_fk FOREIGN KEY (id_pracownika) REFERENCES pracownik(id_pracownika) ON DELETE CASCADE
-ALTER TABLE transakcja
-ADD CONSTRAINT klient_transakcja_fk FOREIGN KEY (id_klienta) REFERENCES klient(id_klienta) ON DELETE CASCADE
-ALTER TABLE transakcja
-ADD CONSTRAINT pojazd_transakcja_fk FOREIGN KEY (id_pojazdu) REFERENCES pojazd(id_pojazdu) ON DELETE CASCADE
-
---towrzenie encji faktura wraz z tworzeniem kluczy obcych 
-
-CREATE TABLE faktura (
-id_faktury int IDENTITY(1,1) PRIMARY KEY,
-nr_faktury int UNIQUE not null,
-id_transakcji int CONSTRAINT transakcja_faktura_fk foreign key (id_transakcji) references transakcja(id_transakcji),
-data_wystawienia date, 
-)
-
 --Dodawanie rekordow do tabeli adres
 
 INSERT INTO adres VALUES
@@ -451,7 +328,7 @@ INSERT INTO adres VALUES
 ('Warszawska', '10', '13' , '82-530', 'Kwiatkowo')
 
 -- dodanie rekordów do encji pracownik 
-INSERT INTO pracownik VALUES
+INSERT INTO pracownik (id_adres, imie, nazwisko, PESEL, telefon, wyplata, email, data_przyjecia) VALUES
 (19,'Klaudia', 'Klawinska', '84071102923' , '724105147', 7000, 'Blabla@gmial.com','2010-05-03'),
 (18,'Jan', 'Kowalski','11111111111', '5433444005', 4000, 'bubu@wp.pl','1998-04-03'),
 (17,'Janusz', 'Kowal', '12345678910' , '333444555', 3000, 'Baba@onet.pl','2017-03-12'),
@@ -515,23 +392,3 @@ INSERT INTO faktura VALUES
 (354, 10, '2018-06-02'),
 (431, 14, '2018-04-01'),
 (512, 8, '2018-06-03')
-
-
-
-ALTER TRIGGER sprawdz_date_przyjecia
-ON pojazd 
-FOR INSERT, UPDATE
-AS
-DECLARE
-	@data_przyjecia DATE;
-BEGIN
-	SELECT @data_przyjecia = data_przyjecia FROM pojazd;
-	IF @data_przyjecia > GETDATE()
-		RAISERROR('Niewłaściwa data przyjęcia!', 1, 2)
-END
-ROLLBACK
-
-
-INSERT INTO pojazd VALUES
-(40, 2, 12, 2033, '321311MNJ41K', 208938, '2019-05-01', 35900)
-
