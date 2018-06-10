@@ -517,45 +517,21 @@ INSERT INTO faktura VALUES
 (512, 8, '2018-06-03')
 
 
---WIDOKI 
 
---widok na auta , które posiadał lub posiada komis
+ALTER TRIGGER sprawdz_date_przyjecia
+ON pojazd 
+FOR INSERT, UPDATE
+AS
+DECLARE
+	@data_przyjecia DATE;
+BEGIN
+	SELECT @data_przyjecia = data_przyjecia FROM pojazd;
+	IF @data_przyjecia > GETDATE()
+		RAISERROR('Niewłaściwa data przyjęcia!', 1, 2)
+END
+ROLLBACK
 
-SELECT 
-	id_pojazdu, nazwa_marki, 
-	nazwa_modelu, rok_produkcji, 
-	nr_vin, przebieg, cena, data_przyjecia
-FROM 
-	pojazd p 
-INNER JOIN 
-	model mo ON p.id_modelu=mo.id_modelu 
-INNER JOIN 
-	marki ma ON p.id_marki=ma.id_marki
 
---widok wszystkich marek oraz modeli 
-
-select nazwa_marki, nazwa_modelu, kraj_pochodzenia  from 
-marki ma inner join model mo ON ma.id_marki = mo.id_marki
-
--- widok aut obecnych w komisie na sprzedaz posorotoawne wedlug ceny rosnaco
-
-select nazwa_marki , nazwa_modelu, rok_produkcji, przebieg , cena , nazwa_koloru, nr_vin   
-from pojazd a inner join model b ON a.id_modelu=b.id_modelu 
-inner join marki d ON a.id_marki=d.id_marki
-inner join transakcja t ON t.id_pojazdu = a.id_pojazdu 
-inner join kolor k on k.id_koloru = a.id_koloru
-where rodzaj_transakcji like 'kupno'
-order by cena DESC  
-
---widok pracowników według ilości transakcji (ranking pracowników) 
-
-select count(*) as ilosc_transakcji, imie, Nazwisko
-from pracownik p inner join transakcja t on p.id_pracownika = t.id_pracownika
-group by p.id_pracownika, imie, Nazwisko
-order by ilosc_transakcji DESC
-
--- widok klientow ktorzy kupili samochody 
-
-select * from pojazd
-
+INSERT INTO pojazd VALUES
+(40, 2, 12, 2033, '321311MNJ41K', 208938, '2019-05-01', 35900)
 
